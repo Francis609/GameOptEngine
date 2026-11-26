@@ -26,9 +26,9 @@ Publish a self-contained Windows build:
 dotnet publish src/GameOptEngine.Service/GameOptEngine.Service.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true -p:UseAppHost=true --output publish/win-x64
 ```
 
-Create a shortcut targeting `publish\win-x64\GameOptEngine.Service.exe`. Set its **Start in** directory to the GameOptEngine project folder. The service opens the local activity viewer at <http://127.0.0.1:5088/>.
+Create a desktop shortcut targeting `publish\win-x64\GameOptEngine.Service.exe`. Set its **Start in** directory to the GameOptEngine project folder. The service watches game processes and serves the local activity viewer at <http://127.0.0.1:5088/>. Only one service instance can run at a time; launching the shortcut again prompts whether to open the existing activity viewer, then exits the duplicate launch. When the running service exits, its hosted monitor and web server shut down gracefully.
 
-For an easier shortcut that opens the viewer in a browser, create a shortcut targeting:
+To create a shortcut that also opens the viewer in a browser on every launch, target:
 
 ```text
 C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
@@ -40,7 +40,7 @@ Use these arguments (adjust the project path as needed):
 -NoProfile -WindowStyle Hidden -Command "Start-Process -FilePath 'C:\path\to\GameOptEngine\publish\win-x64\GameOptEngine.Service.exe'; Start-Sleep -Seconds 3; Start-Process 'http://127.0.0.1:5088/'"
 ```
 
-The application monitors only detected process names and logs game start/exit events with indexed sequence numbers. Configure extra game process names with `GAMEOPTENGINE_GAME_PROCESS_NAMES=GameA,GameB`. It does not inspect keystrokes, browser history, or general user activity.
+Prefer the direct service shortcut above if you want the single-instance prompt to control whether a browser opens. The application monitors only detected process names and logs game start/exit events with indexed sequence numbers. Configure extra game process names with `GAMEOPTENGINE_GAME_PROCESS_NAMES=GameA,GameB`. It does not inspect keystrokes, browser history, or general user activity.
 
 ## Colored command-line activity viewer
 

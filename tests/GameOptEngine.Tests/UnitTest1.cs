@@ -77,3 +77,50 @@ public sealed class MemoryManagerTests
         Assert.Null(exception);
     }
 }
+
+public sealed class SingleInstanceLeaseTests
+{
+    [Fact]
+    public void TryAcquire_ReturnsNullWhileAnotherLeaseOwnsTheLock()
+    {
+        var root = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        var lockPath = Path.Combine(root, "service.lock");
+
+        try
+        {
+            using (var first = SingleInstanceLease.TryAcquire(lockPath))
+            {
+                Assert.NotNull(first);
+                Assert.Null(SingleInstanceLease.TryAcquire(lockPath));
+            }
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void TryAcquire_AllowsAnotherInstanceAfterLeaseIsDisposed()
+    {
+        var root = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        var lockPath = Path.Combine(root, "service.lock");
+
+        try
+        {
+            using (var first = SingleInstanceLease.TryAcquire(lockPath))
+            {
+                Assert.NotNull(first);
+            }
+
+            using (var second = SingleInstanceLease.TryAcquire(lockPath))
+            {
+                Assert.NotNull(second);
+            }
+        }
+        finally
+        {
+            Directory.Delete(root, recursive: true);
+        }
+    }
+}
