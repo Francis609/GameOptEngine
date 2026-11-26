@@ -1,0 +1,27 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": ".NET: Launch GameOptEngine Service",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "dotnet: build solution",
+      "program": "${workspaceFolder}/src/GameOptEngine.Service/bin/Release/net8.0/GameOptEngine.Service.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/GameOptEngine.Service",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    },
+    {
+      "name": ".NET: Launch GameOptEngine CLI",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "dotnet: build solution",
+      "program": "${workspaceFolder}/src/GameOptEngine.Cli/bin/Release/net8.0/GameOptEngine.Cli.dll",
+      "args": [],
+      "cwd": "${workspaceFolder}/src/GameOptEngine.Cli",
+      "console": "internalConsole",
+      "stopAtEntry": false
+    }
+  ]
+}

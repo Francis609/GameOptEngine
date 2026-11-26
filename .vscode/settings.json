@@ -1,0 +1,25 @@
+{
+  "dotnet.defaultSolution": "GameOptEngine.sln",
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  },
+  "search.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  },
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports": "explicit"
+  },
+  "[csharp]": {
+    "editor.defaultFormatter": "ms-dotnettools.csharp",
+    "editor.formatOnSave": true
+  },
+  "github.copilot.enable": {
+    "*": true,
+    "yaml": true,
+    "markdown": true
+  },
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true
+}

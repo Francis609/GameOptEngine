@@ -1,0 +1,42 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "dotnet: build solution",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["build", "GameOptEngine.sln", "--configuration", "Release"],
+      "problemMatcher": "$msCompile",
+      "group": { "kind": "build", "isDefault": true }
+    },
+    {
+      "label": "dotnet: test solution",
+      "type": "process",
+      "command": "dotnet",
+      "args": ["test", "GameOptEngine.sln", "--configuration", "Release"],
+      "problemMatcher": "$msCompile",
+      "group": "test"
+    },
+    {
+      "label": "docker: build image",
+      "type": "process",
+      "command": "docker",
+      "args": ["build", "--tag", "gameoptengine:local", "."],
+      "problemMatcher": []
+    },
+    {
+      "label": "docker: compose up",
+      "type": "process",
+      "command": "docker",
+      "args": ["compose", "up", "--pull", "always", "--build"],
+      "problemMatcher": []
+    },
+    {
+      "label": "docker: compose logs",
+      "type": "process",
+      "command": "docker",
+      "args": ["compose", "logs", "--follow", "gameoptengine"],
+      "problemMatcher": []
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dotnet:
+    name: Build, test, and audit dependencies
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore with vulnerability warnings treated as errors
+        run: dotnet restore GameOptEngine.sln -p:NuGetAudit=true -p:NuGetAuditLevel=low -p:WarningsAsErrors=NU1901%3BNU1902%3BNU1903%3BNU1904
+
+      - name: Build
+        run: dotnet build GameOptEngine.sln --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test GameOptEngine.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"
+
+      - name: Audit all direct and transitive NuGet dependencies
+        run: dotnet list GameOptEngine.sln package --vulnerable --include-transitive
+
+  container:
+    name: Build and scan container image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Build container image
+        run: docker build --pull --tag gameoptengine:${{ github.sha }} .
+
+      - name: Scan image for HIGH and CRITICAL vulnerabilities
+        uses: aquasecurity/trivy-action@0.28.0
+        with:
+          image-ref: gameoptengine:${{ github.sha }}
+          format: table
+          vuln-type: os,library
+          severity: HIGH,CRITICAL
+          ignore-unfixed: true
+          exit-code: 1
