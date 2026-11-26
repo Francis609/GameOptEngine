@@ -13,11 +13,16 @@ RUN dotnet publish src/GameOptEngine.Service/GameOptEngine.Service.csproj \
     --configuration Release \
     --no-restore \
     --output /app/publish \
-    /p:UseAppHost=false
+    /p:UseAppHost=false \
+    && mkdir -p /var/lib/gameoptengine \
+    && chown -R 1654:1654 /var/lib/gameoptengine
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-noble AS runtime
+# Chiseled runtime removes package-manager and shell payload from the final image.
+FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
 WORKDIR /app
+RUN apk update \
+    && apk upgrade --no-cache libcrypto3 libssl3
 COPY --from=build /app/publish .
-RUN mkdir -p /var/lib/gameoptengine && chown $APP_UID /var/lib/gameoptengine
-USER $APP_UID
+COPY --from=build --chown=1654:1654 /var/lib/gameoptengine /var/lib/gameoptengine
+USER 1654:1654
 ENTRYPOINT ["dotnet", "GameOptEngine.Service.dll"]
