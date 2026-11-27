@@ -37,8 +37,24 @@ impl ActivityLog {
     }
     async fn record(&self, activity: &str, details: String) -> Result<ActivityRecord, String> {
         let mut records = self.records.lock().await;
+        let persisted_last = tokio::fs::read_to_string(&self.path)
+            .await
+            .ok()
+            .map(|contents| {
+                contents
+                    .lines()
+                    .filter_map(|line| serde_json::from_str::<ActivityRecord>(line).ok())
+                    .map(|record| record.index)
+                    .max()
+                    .unwrap_or(0)
+            })
+            .unwrap_or(0);
         let row = ActivityRecord {
-            index: records.last().map_or(1, |r| r.index + 1),
+            index: records
+                .last()
+                .map_or(0, |record| record.index)
+                .max(persisted_last)
+                + 1,
             timestamp_utc: Utc::now(),
             activity: activity.into(),
             details,
