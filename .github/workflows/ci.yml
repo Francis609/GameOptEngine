@@ -52,11 +52,13 @@ jobs:
         run: docker build --pull --tag gameoptengine:${{ github.sha }} .
 
       - name: Scan image for HIGH and CRITICAL vulnerabilities
-        uses: aquasecurity/trivy-action@v0.28.0
-        with:
-          image-ref: gameoptengine:${{ github.sha }}
-          format: table
-          vuln-type: os,library
-          severity: HIGH,CRITICAL
-          ignore-unfixed: true
-          exit-code: 1
+        run: >-
+          docker run --rm
+          -v /var/run/docker.sock:/var/run/docker.sock
+          aquasec/trivy:latest image
+          --format table
+          --vuln-type os,library
+          --severity HIGH,CRITICAL
+          --ignore-unfixed
+          --exit-code 1
+          gameoptengine:${{ github.sha }}
