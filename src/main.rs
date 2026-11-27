@@ -233,10 +233,10 @@ fn steam_roots() -> Vec<PathBuf> {
         let library = root.join("steamapps").join("libraryfolders.vdf");
         if let Ok(contents) = std::fs::read_to_string(library) {
             for line in contents.lines() {
-                if line.contains("\"path\"") {
-                    if let Some(path) = line.split('"').nth(3) {
-                        expanded.push(PathBuf::from(path.replace("\\\\", "\\")));
-                    }
+                if line.contains("\"path\"")
+                    && let Some(path) = line.split('"').nth(3)
+                {
+                    expanded.push(PathBuf::from(path.replace("\\\\", "\\")));
                 }
             }
         }
