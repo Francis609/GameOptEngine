@@ -1,28 +1,15 @@
-# syntax=docker/dockerfile:1.7
-FROM mcr.microsoft.com/dotnet/sdk:8.0-noble AS build
+FROM rust:1.100-alpine AS build
+RUN apk add --no-cache musl-dev
 WORKDIR /src
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+RUN cargo build --release --locked
 
-# Restore separately so source edits do not invalidate dependency layers.
-COPY GameOptEngine.sln ./
-COPY Directory.Build.props ./
-COPY src/GameOptEngine.Service/GameOptEngine.Service.csproj src/GameOptEngine.Service/
-RUN dotnet restore src/GameOptEngine.Service/GameOptEngine.Service.csproj
-
-COPY src/GameOptEngine.Service/ src/GameOptEngine.Service/
-RUN dotnet publish src/GameOptEngine.Service/GameOptEngine.Service.csproj \
-    --configuration Release \
-    --no-restore \
-    --output /app/publish \
-    /p:UseAppHost=false \
-    && mkdir -p /var/lib/gameoptengine \
-    && chown -R 1654:1654 /var/lib/gameoptengine
-
-# Chiseled runtime removes package-manager and shell payload from the final image.
-FROM mcr.microsoft.com/dotnet/aspnet:8.0-alpine AS runtime
+FROM alpine:3.24
+RUN apk add --no-cache ca-certificates && addgroup -S app && adduser -S -G app app
 WORKDIR /app
-RUN apk update \
-    && apk upgrade --no-cache libcrypto3 libssl3
-COPY --from=build /app/publish .
-COPY --from=build --chown=1654:1654 /var/lib/gameoptengine /var/lib/gameoptengine
-USER 1654:1654
-ENTRYPOINT ["dotnet", "GameOptEngine.Service.dll"]
+COPY --from=build /src/target/release/gameoptengine /usr/local/bin/gameoptengine
+USER app
+ENV GAMEOPTENGINE_ACTIVITY_LOG_PATH=/var/lib/gameoptengine/activity.jsonl
+EXPOSE 5088
+ENTRYPOINT ["/usr/local/bin/gameoptengine", "run"]
