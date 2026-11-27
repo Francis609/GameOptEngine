@@ -7,7 +7,7 @@ services:
     restart: unless-stopped
     environment:
       GAMEOPTENGINE_ACTIVITY_LOG_PATH: /var/lib/gameoptengine/activity.jsonl
-      GAMEOPTENGINE_ACTIVITY_VIEWER_PREFIX: http://0.0.0.0:5088/
+      GAMEOPTENGINE_ACTIVITY_VIEWER_PREFIX: 0.0.0.0:5088
     ports:
       - "127.0.0.1:5088:5088"
     volumes:
@@ -24,6 +24,5 @@ services:
         limits:
           memory: 256M
           cpus: "1.0"
-
 volumes:
   gameoptengine-activity:

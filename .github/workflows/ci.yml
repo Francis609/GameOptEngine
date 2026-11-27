@@ -15,50 +15,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  dotnet:
+  rust:
     name: Build, test, and audit dependencies
     runs-on: ubuntu-latest
     steps:
-      - name: Check out source
-        uses: actions/checkout@v4
-
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          dotnet-version: 8.0.x
-
-      - name: Restore with vulnerability warnings treated as errors
-        run: dotnet restore GameOptEngine.sln -p:NuGetAudit=true -p:NuGetAuditLevel=low -p:WarningsAsErrors=NU1901%3BNU1902%3BNU1903%3BNU1904
-
-      - name: Build
-        run: dotnet build GameOptEngine.sln --configuration Release --no-restore
-
-      - name: Test
-        run: dotnet test GameOptEngine.sln --configuration Release --no-build --logger "trx;LogFileName=test-results.trx"
-
-      - name: Audit all direct and transitive NuGet dependencies
-        run: dotnet list GameOptEngine.sln package --vulnerable --include-transitive
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - run: cargo fmt --all -- --check
+      - run: cargo test --locked
+      - run: cargo build --release --locked
+      - run: cargo clippy --locked --all-targets -- -D warnings
 
   container:
     name: Build and scan container image
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
-      - name: Check out source
-        uses: actions/checkout@v4
-
+      - uses: actions/checkout@v4
       - name: Build container image
         run: docker build --pull --tag gameoptengine:${{ github.sha }} .
-
-      - name: Scan image for HIGH and CRITICAL vulnerabilities
-        run: >-
-          docker run --rm
-          -v /var/run/docker.sock:/var/run/docker.sock
-          aquasec/trivy:latest image
-          --format table
-          --pkg-types os,library
-          --severity HIGH,CRITICAL
-          --ignore-unfixed
-          --exit-code 1
-          gameoptengine:${{ github.sha }}
+      - name: Set up Trivy
+        uses: aquasecurity/setup-trivy@3fb12ec12f41e471780db15c232d5dd185dcb514 # v0.2.6
+        with:
+          version: v0.76.0
+      - name: Scan image
+        run: trivy image --pkg-types os,library --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 gameoptengine:${{ github.sha }}
